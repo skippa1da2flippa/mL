@@ -1,2 +1,2 @@
 # mL
-some unsupervised machine learning algorithm
+some unsupervised machine learning algorithms
