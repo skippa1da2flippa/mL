@@ -2,7 +2,7 @@ import pandas as pd
 from numpy import ndarray
 from sklearn.cluster import MeanShift
 
-from base_classes import BaseModelFactory
+from src.base_classes.base_class import BaseModelFactory
 
 """
 

@@ -2,19 +2,20 @@ import function
 import numpy as np
 import pandas as pd
 from numpy import ndarray, array
-from sklearn.mixture._base import BaseMixture
-from PCA_reduction.PCA import PcaFeatsWrapper
-from base_factory import BaseFactory
-from utility.random_index import randIndexComputing
+from sklearn.base import BaseEstimator
+from src.PCA_reduction.PCA import PcaFeatsWrapper
+from src.base_classes.base_factory import BaseFactory
+from src.utility.random_index import randIndexComputing
 
 
 class BaseModelFactory(BaseFactory):
 
     def __init__(
             self, models: list, candidates: list[float],
-            fitNdTesting: function, X: pd.DataFrame, y: ndarray
+            fitNdTesting: function, X: pd.DataFrame, y: ndarray,
+            lowerBound: int = 2, upperBound: int = 200
     ):
-        self._pcaHandler: PcaFeatsWrapper = PcaFeatsWrapper()
+        self._pcaHandler: PcaFeatsWrapper = PcaFeatsWrapper(lowerBound=lowerBound, upperBound=upperBound)
         self._models: list = models
         self._candidates: list[float] = candidates
         self._fitNdTesting: function = fitNdTesting
@@ -28,7 +29,7 @@ class BaseModelFactory(BaseFactory):
         randomIndexes: ndarray[float] = array([])
 
         for idx in range(0, len(self._models)):
-            # train the model and see how the it's doing with the training data
+            # train the model and see how it's doing with the training data
             prediction = self._fitNdTesting(self._models[idx], self._X)
 
             # compare the model prediction with the actual prediction and store it in a collection
@@ -41,7 +42,7 @@ class BaseModelFactory(BaseFactory):
         hyperParam: float = self._candidates[bestIdx]
 
         # find the best model
-        bestModel: BaseMixture = self._models[bestIdx]
+        bestModel: BaseEstimator = self._models[bestIdx]
 
         # return a tuple containing the best hyper-parameter,
         # all the random indexes and if required the best model
@@ -50,9 +51,12 @@ class BaseModelFactory(BaseFactory):
         else:
             return hyperParam, randomIndexes, bestModel
 
-    def modelsBuilder(self):
+    def modelsBuilder(self) -> ndarray[dict[str, float]]:
         # retrieve the data after the dimensionality changes (PCA)
         dataFrameCollection: list[pd.DataFrame] = self._pcaProcess()
+
+        # assign the minimum number of dimensions to start the process
+        nDimension: int = self._pcaHandler.lowerBound
 
         for idx in range(0, len(dataFrameCollection)):
             # for each dimensionality reduction a tuning process is instantiated
@@ -60,10 +64,12 @@ class BaseModelFactory(BaseFactory):
 
             # append the result of the tuning process
             self._outcomeCollection = np.append(self._outcomeCollection, {
-                "dimensions": idx + 2,
+                "dimensions": nDimension,
                 "hyper-param": tempTup[0],
                 "rand-index": np.max(tempTup[1])
             })
+
+            nDimension += 1
 
         return self._outcomeCollection
 

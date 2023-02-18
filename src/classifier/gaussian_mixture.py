@@ -4,9 +4,9 @@ import numpy as np
 from sklearn.mixture import GaussianMixture
 from sklearn.mixture._base import BaseMixture
 
-from base_classes.base_class import BaseModelFactory
-from utility.fetchedData import X_train, y_train
-from utility.random_index import randIndexComputing
+from src.base_classes.base_class import BaseModelFactory
+from src.utility.fetchedData import X_train, y_train
+from src.utility.random_index import randIndexComputing
 
 
 # tuning process of k gaussian mixtures
@@ -63,7 +63,7 @@ print(tup)
 
 class GaussianMixturesFactory(BaseModelFactory):
 
-    def __init__(self, X: pd.DataFrame, y: ndarray):
+    def __init__(self, X: pd.DataFrame, y: ndarray,  lowerBound: int = 2, upperBound: int = 200):
         # save the data set
         self._X: pd.DataFrame = X
         self._y: ndarray = y
@@ -88,13 +88,13 @@ class GaussianMixturesFactory(BaseModelFactory):
 
         # set up the base class
         super().__init__(
-            self.gaussianMixtures, self.nClusters, _fitNdTesting, self._X, self._y
+            self.gaussianMixtures, self.nClusters, _fitNdTesting, self._X, self._y, lowerBound, upperBound
         )
 
     def tuningProcess(self, returnBestModel: bool = False) -> tuple:
         return super().tuningProcess(returnBestModel)
 
-    def modelsBuilder(self):
+    def modelsBuilder(self) -> ndarray[dict[str, float]]:
         return super().modelsBuilder()
 
     def updateDataSet(self, X_new: pd.DataFrame, y_new: ndarray):
